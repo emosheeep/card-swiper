@@ -1,31 +1,29 @@
 <template>
-    <div id="card-swiper" ref="swiper">
+    <div class="card-swiper" ref="swiper">
       <div id="img-container" ref="container">
         <img
-          class="images"
           alt="辅助图"
           :src="images[images.length - 1]"
         />
         <img
-          class="images"
           v-for="(src, index) in images"
           :key="index"
           :src="src"
           :alt="`第${ index + 1 }张`"
         />
         <img
-          class="images"
           alt="辅助图"
           :src="images[0]"
         />
       </div>
       <div class="ctrl-btn">
+<!--        fontawesome-->
         <i class="fa fa-angle-left pre" @click="pre"/>
         <i class="fa fa-angle-right next" @click="next"/>
       </div>
-      <div class="nav" ref="nav">
+      <div class="card-nav" ref="nav">
         <div
-          class="nav-item"
+          class="card-nav-item"
           v-for="(item, index) in images"
           :key="index"
           @click="setIndex(index, item)"
@@ -44,14 +42,8 @@ export default {
       type: Array,
       required: true
     },
-    width: {
-      type: [Number, String],
-      required: true
-    },
-    height: {
-      type: [Number, String],
-      required: true
-    }
+    width: [Number, String],
+    height: [Number, String]
   },
   data () {
     return {
@@ -65,8 +57,7 @@ export default {
         if (newVal === this.tempIndex) {
           return
         }
-        this.$emit('change', newVal, this.tempIndex)
-        this.setNavItem(newVal, this.tempIndex)
+        this.setNavItem(newVal, this.tempIndex) // 传入新旧值
         if (newVal === 0) {
           this.move(0, el => {
             this.tempIndex = this.images.length
@@ -124,11 +115,13 @@ export default {
     // 设置下方导航球
     setNavItem (newVal, oldVal) {
       const navItems = this.$refs.nav.children
+      // 转换两端的索引
       if (newVal === this.images.length + 1) {
         newVal = newVal - this.images.length
       } else if (newVal === 0) {
         newVal = this.images.length
       }
+      this.$emit('change', newVal - 1, this.tempIndex - 1)
       Object.assign(navItems[newVal - 1].style, {
         backgroundColor: 'orangered',
         opacity: 1
@@ -160,22 +153,23 @@ export default {
 </script>
 
 <style scoped lang="stylus">
-#card-swiper
+.card-swiper
+  $width = 300px
   position relative
-  width 300px
+  width $width
   height 150px
   margin 0 auto
-  /*overflow hidden*/
+  overflow hidden
   #img-container
     display flex
     flex-wrap nowrap
     position absolute
     left 0
     height 100%
-  .images
-    width 300px
-    height 100%
-.nav
+    img
+      width $width
+      height 100%
+.card-nav
   position absolute
   bottom 0
   left 50%
@@ -185,7 +179,7 @@ export default {
   justify-content space-around
   width 50%
   height 20px
-  .nav-item
+  .card-nav-item
     width 10px
     height 10px
     margin auto 0
@@ -209,5 +203,4 @@ export default {
   .next
     position absolute
     right 0
-
 </style>

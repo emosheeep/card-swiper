@@ -1,9 +1,8 @@
 <template>
    <div>
      <card-swipe
+       autoplay
        :images="images"
-       width="300"
-       height="150"
        @change="onChange"
      />
    </div>
@@ -36,5 +35,6 @@ export default {
 </script>
 
 <style scoped lang="stylus">
-
+.swiper
+  width 500px !important
 </style>
