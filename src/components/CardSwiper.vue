@@ -1,37 +1,57 @@
 <template>
-    <div class="card__swiper" ref="swiper">
-      <div class="img__container" ref="container">
-        <img
-          alt="辅助图"
-          :src="images[images.length - 1]"
-        />
-        <img
-          v-for="(src, index) in images"
-          :key="index"
-          :src="src"
-          :alt="`第${ index + 1 }张`"
-        />
-        <img
-          alt="辅助图"
-          :src="images[0]"
-        />
-      </div>
-      <div class="ctrl-btn">
-<!--        fontawesome-->
-        <i class="fa fa-angle-left pre" @click="pre"/>
-        <i class="fa fa-angle-right next" @click="next"/>
-      </div>
-      <nav class="card-nav">
-        <div
-          class="card-nav-item"
-          v-for="(item, index) in images"
-          :key="index"
-          ref="navItems"
-          @click="setIndex(index, item)"
-          @mouseover="setIndex(index, item)"
-        />
-      </nav>
+  <div class="card__swiper" ref="swiper">
+    <!-- 图片容器 -->
+    <div
+      class="img__container"
+      ref="container"
+    >
+      <img
+        alt="辅助图"
+        :src="images[images.length - 1]"
+      />
+      <img
+        v-for="(src, index) in images"
+        :key="index"
+        :src="src"
+        :alt="`第${ index + 1 }张`"
+      />
+      <img
+        alt="辅助图"
+        :src="images[0]"
+      />
     </div>
+
+    <!-- 左右切换按钮 -->
+    <div class="ctrl-btn">
+      <div class="pre" @click="pre">
+        <slot name="pre">
+          <i class="icon__pre" />
+        </slot>
+      </div>
+      <div class="next" @click="next">
+        <slot name="next">
+          <i class="icon__next" />
+        </slot>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <ul class="card-nav">
+      <li
+        v-for="(item, index) in images"
+        :key="index"
+        @click="setIndex(index, item)"
+        @mouseover="setIndex(index, item)"
+      >
+        <!-- li元素用来占位，增加面积，span元素用来显示 -->
+        <span
+          :class="['card-nav-item', {
+            active: index === idx - 1
+          }]"
+        />
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script>
@@ -53,41 +73,43 @@ export default {
     },
     autoplay: {
       type: [Boolean, Number],
-      default: false
+      default: 3000
     }
   },
   data () {
     return {
-      tempIndex: 1,
-      isComplete: true
+      idx: 1,
+      isComplete: true,
+      timer: null
     }
   },
   computed: {
     index: {
       set (newVal) {
-        if (newVal === this.tempIndex) {
+        if (newVal === this.idx) {
           return
         }
-        this.setNavItem(newVal, this.tempIndex) // 传入新旧值
         if (newVal === 0) {
           this.move(newVal, el => {
-            this.tempIndex = this.images.length
+            this.idx = this.images.length
             el.style.left = `${this.right}px`
           })
         } else if (newVal === this.images.length + 1) {
-          // 跳转到最开始
+          // 跳转到起点
           const distance = newVal * this.baseWidth
           this.move(distance, el => {
-            this.tempIndex = 1
+            this.idx = 1
             el.style.left = `${this.baseWidth}px`
           })
         } else {
-          this.tempIndex = newVal
-          this.move(this.baseWidth * this.tempIndex)
+          this.idx = newVal
+          this.move(this.baseWidth * this.idx)
         }
+        this.setNavItem(newVal, this.idx)
+        this.setTimer() // 重置定时器，提升体验
       },
       get () {
-        return this.tempIndex
+        return this.idx
       }
     },
     baseWidth () {
@@ -125,18 +147,32 @@ export default {
         }
       })
     },
-    // 设置下方导航球
+    // 设置下方导航条
     setNavItem (newVal, oldVal) {
-      const navItems = this.$refs.navItems
       // 转换两端的索引
       if (newVal === this.images.length + 1) {
         newVal = newVal - this.images.length
       } else if (newVal === 0) {
         newVal = this.images.length
       }
-      navItems[newVal - 1].classList.add('active')
-      navItems[oldVal - 1].classList.remove('active')
-      this.$emit('change', newVal - 1, this.tempIndex - 1)
+      this.$emit('change', newVal - 1, this.idx - 1)
+    },
+    setTimer () {
+      if (!this.autoplay) {
+        return
+      }
+      let time = 3000
+      if (typeof this.autoplay === 'number' && this.autoplay > time) {
+        time = this.autoplay
+      }
+      // 重载
+      this.setTimer = () => {
+        if (this.timer) {
+          clearInterval(this.timer)
+        }
+        this.timer = setInterval(this.next.bind(this), time)
+      }
+      this.setTimer()
     },
     init () {
       const images = this.$refs.container.querySelectorAll('img')
@@ -151,22 +187,16 @@ export default {
     }
   },
   mounted () {
-    this.init()
-    if (this.autoplay || typeof this.autoplay === 'number') {
-      const time = this.autoplay > 2000 ? this.autoplay : 2000
-      setInterval(this.next.bind(this), time)
-    }
     if (this.images.length === 0) {
-      throw new Error('请传入非空图片路径数组')
+      throw new Error('images shouldn\'t be empty !')
     }
+    this.init()
+    this.setTimer()
   }
 }
 </script>
 
 <style scoped lang="stylus">
-.active
-  background-color orangered !important
-  opacity 1 !important
 // 轮播样式
 .card__swiper
   position relative
@@ -175,8 +205,25 @@ export default {
   position absolute
   display flex
   flex-wrap nowrap
+// 前后按钮
+.pre, .next
+  position absolute
+  top 50%
+  transform translateY(-50%)
+  cursor pointer
+.pre
+  left 0
+.next
+  right 0
+// 按钮图标
+.icon__pre::after
+  content '<'
+.icon__next::after
+  content '>'
+  font-size 20px
+  transform scale(5)
 // 导航样式
-.card-nav
+ul.card-nav
   position absolute
   bottom 0
   left 50%
@@ -186,25 +233,20 @@ export default {
   justify-content space-around
   width 50%
   height 20px
+  padding 0
+  margin 0
+  list-style none
+  li
+    cursor pointer
 .card-nav-item
-  width 10px
-  height 10px
-  margin auto 0
+  display inline-block
+  vertical-align middle
+  width 20px
+  height 2px
   background-color black
   opacity 0.4
-  border-radius 10px
-.ctrl-btn
-  position relative
-  top 50%
-  transform translateY(-50%)
-  height 40px
-  margin auto 0
-  font-size 40px
-  opacity 0.8
-  .pre
-    position absolute
-    left 0
-  .next
-    position absolute
-    right 0
+  transition all .5s ease
+.active
+  background-color white !important
+  opacity 1 !important
 </style>

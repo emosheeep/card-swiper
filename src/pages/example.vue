@@ -1,11 +1,15 @@
 <template>
    <card-swipe
-      :autoplay="4000"
       width="600"
       height="300"
       :images="images"
       @change="onChange"
-    />
+      class="swiper"
+    >
+    <template #pre>
+      <div>这是插槽</div>
+    </template>
+   </card-swipe>
 </template>
 
 <script>
@@ -25,9 +29,9 @@ export default {
       console.log(`curIndex：${index}`, `oldIndex：${oldIndex}`)
     }
   },
-  created () {
+  mounted () {
     const img = [
-      '古风男子.jpg', '对弈.jpeg', '我的一个道姑朋友.png', '断桥.png',
+      '对弈.jpeg', '古风男子.jpg', '我的一个道姑朋友.png', '断桥.png',
       '昨日青空.jpg', '李白.jpg', '独占我的英雄.jpg', '花丛.jpg', '魔道祖师.jpg'
     ]
     this.images = img.map(item => `${this.path}/${item}`)
@@ -37,5 +41,5 @@ export default {
 
 <style scoped lang="stylus">
 .swiper
-  width 500px !important
+  margin 0 auto
 </style>
