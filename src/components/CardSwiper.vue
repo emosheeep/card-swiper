@@ -1,6 +1,6 @@
 <template>
-    <div class="card-swiper" ref="swiper">
-      <div id="img-container" ref="container">
+    <div class="card__swiper" ref="swiper">
+      <div class="img__container" ref="container">
         <img
           alt="辅助图"
           :src="images[images.length - 1]"
@@ -21,15 +21,16 @@
         <i class="fa fa-angle-left pre" @click="pre"/>
         <i class="fa fa-angle-right next" @click="next"/>
       </div>
-      <div class="card-nav" ref="nav">
+      <nav class="card-nav">
         <div
           class="card-nav-item"
           v-for="(item, index) in images"
           :key="index"
+          ref="navItems"
           @click="setIndex(index, item)"
           @mouseover="setIndex(index, item)"
         />
-      </div>
+      </nav>
     </div>
 </template>
 
@@ -42,8 +43,18 @@ export default {
       type: Array,
       required: true
     },
-    width: [Number, String],
-    height: [Number, String]
+    width: {
+      type: [Number, String],
+      default: 300
+    },
+    height: {
+      type: [Number, String],
+      default: 150
+    },
+    autoplay: {
+      type: [Boolean, Number],
+      default: false
+    }
   },
   data () {
     return {
@@ -59,12 +70,14 @@ export default {
         }
         this.setNavItem(newVal, this.tempIndex) // 传入新旧值
         if (newVal === 0) {
-          this.move(0, el => {
+          this.move(newVal, el => {
             this.tempIndex = this.images.length
             el.style.left = `${this.right}px`
           })
         } else if (newVal === this.images.length + 1) {
-          this.move(-3000, el => {
+          // 跳转到最开始
+          const distance = newVal * this.baseWidth
+          this.move(distance, el => {
             this.tempIndex = 1
             el.style.left = `${this.baseWidth}px`
           })
@@ -114,61 +127,55 @@ export default {
     },
     // 设置下方导航球
     setNavItem (newVal, oldVal) {
-      const navItems = this.$refs.nav.children
+      const navItems = this.$refs.navItems
       // 转换两端的索引
       if (newVal === this.images.length + 1) {
         newVal = newVal - this.images.length
       } else if (newVal === 0) {
         newVal = this.images.length
       }
+      navItems[newVal - 1].classList.add('active')
+      navItems[oldVal - 1].classList.remove('active')
       this.$emit('change', newVal - 1, this.tempIndex - 1)
-      Object.assign(navItems[newVal - 1].style, {
-        backgroundColor: 'orangered',
-        opacity: 1
-      })
-      Object.assign(navItems[oldVal - 1].style, {
-        backgroundColor: 'black',
-        opacity: 0.5
-      })
     },
     init () {
-      const images = document.querySelectorAll('.images')
-      images.forEach(img => {
+      const images = this.$refs.container.querySelectorAll('img')
+      const { swiper, container } = this.$refs
+      Array.from(images).forEach(img => {
         img.style.width = `${this.width}px`
         img.style.height = `${this.height}px`
       })
-      this.$refs.swiper.style.width = `-${this.width}px`
-      this.$refs.swiper.style.height = `${this.height}px`
-      this.$refs.container.style.left = `${this.baseWidth}px`
+      swiper.style.width = `${this.width}px`
+      swiper.style.height = `${this.height}px`
+      container.style.left = `${this.baseWidth}px`
     }
   },
   mounted () {
     this.init()
-    if (this.$attrs.hasOwnProperty('autoplay')) {
-      const time = this.$attrs.autoplay || 3000
+    if (this.autoplay || typeof this.autoplay === 'number') {
+      const time = this.autoplay > 2000 ? this.autoplay : 2000
       setInterval(this.next.bind(this), time)
+    }
+    if (this.images.length === 0) {
+      throw new Error('请传入非空图片路径数组')
     }
   }
 }
 </script>
 
 <style scoped lang="stylus">
-.card-swiper
-  $width = 300px
+.active
+  background-color orangered !important
+  opacity 1 !important
+// 轮播样式
+.card__swiper
   position relative
-  width $width
-  height 150px
-  margin 0 auto
   overflow hidden
-  #img-container
-    display flex
-    flex-wrap nowrap
-    position absolute
-    left 0
-    height 100%
-    img
-      width $width
-      height 100%
+.img__container
+  position absolute
+  display flex
+  flex-wrap nowrap
+// 导航样式
 .card-nav
   position absolute
   bottom 0
@@ -179,16 +186,13 @@ export default {
   justify-content space-around
   width 50%
   height 20px
-  .card-nav-item
-    width 10px
-    height 10px
-    margin auto 0
-    background-color black
-    opacity 0.5
-    border-radius 10px
-    &:nth-child(1)
-      background-color orangered
-      opacity 1
+.card-nav-item
+  width 10px
+  height 10px
+  margin auto 0
+  background-color black
+  opacity 0.4
+  border-radius 10px
 .ctrl-btn
   position relative
   top 50%

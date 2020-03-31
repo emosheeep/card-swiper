@@ -1,11 +1,11 @@
 <template>
-   <div>
-     <card-swipe
-       autoplay
-       :images="images"
-       @change="onChange"
-     />
-   </div>
+   <card-swipe
+      :autoplay="4000"
+      width="600"
+      height="300"
+      :images="images"
+      @change="onChange"
+    />
 </template>
 
 <script>
