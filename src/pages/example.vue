@@ -1,15 +1,9 @@
 <template>
    <card-swipe
-      width="600"
-      height="300"
       :images="images"
       @change="onChange"
       class="swiper"
-    >
-    <template #pre>
-      <div>这是插槽</div>
-    </template>
-   </card-swipe>
+    />
 </template>
 
 <script>

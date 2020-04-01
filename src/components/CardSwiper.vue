@@ -22,17 +22,25 @@
     </div>
 
     <!-- 左右切换按钮 -->
-    <div class="ctrl-btn">
-      <div class="pre" @click="pre">
-        <slot name="pre">
-          <i class="icon__pre" />
-        </slot>
-      </div>
-      <div class="next" @click="next">
-        <slot name="next">
-          <i class="icon__next" />
-        </slot>
-      </div>
+    <div
+      :class="['pre', { 'pre__active': isEnter }]"
+      @click="pre"
+    >
+      <slot name="pre">
+        <div class="icon__pre">
+          <img src="../assets/left.svg">
+        </div>
+      </slot>
+    </div>
+    <div
+      :class="['next', { 'next__active': isEnter }]"
+      @click="next"
+    >
+      <slot name="next">
+        <div class="icon__next">
+          <img src="../assets/right.svg">
+        </div>
+      </slot>
     </div>
 
     <!-- 导航栏 -->
@@ -65,11 +73,11 @@ export default {
     },
     width: {
       type: [Number, String],
-      default: 300
+      default: 500
     },
     height: {
       type: [Number, String],
-      default: 150
+      default: 250
     },
     autoplay: {
       type: [Boolean, Number],
@@ -79,8 +87,9 @@ export default {
   data () {
     return {
       idx: 1,
-      isComplete: true,
-      timer: null
+      isComplete: true, // 控制事件切换频率
+      timer: null, // 控制轮播定时器
+      isEnter: false // 控制按钮动画
     }
   },
   computed: {
@@ -174,6 +183,20 @@ export default {
       }
       this.setTimer()
     },
+    bindHover () {
+      const enterHandler = e => {
+        this.isEnter = true
+      }
+      const leaveHandler = e => {
+        this.isEnter = false
+      }
+      this.$refs.swiper.addEventListener('mouseenter', enterHandler)
+      this.$refs.swiper.addEventListener('mouseleave', leaveHandler)
+      this.$once('hook:beforeDestroy', () => {
+        this.$refs.swiper.removeEventListener('mouseenter', enterHandler)
+        this.$refs.swiper.removeEventListener('mouseleave', leaveHandler)
+      })
+    },
     init () {
       const images = this.$refs.container.querySelectorAll('img')
       const { swiper, container } = this.$refs
@@ -192,6 +215,7 @@ export default {
     }
     this.init()
     this.setTimer()
+    this.bindHover()
   }
 }
 </script>
@@ -209,43 +233,53 @@ export default {
 .pre, .next
   position absolute
   top 50%
+  transition all .5s ease
   transform translateY(-50%)
   cursor pointer
+  user-select none
 .pre
-  left 0
+  left -40px
+.pre__active
+  left 10px
 .next
-  right 0
+  right -40px
+.next__active
+  right 10px
 // 按钮图标
-.icon__pre::after
-  content '<'
-.icon__next::after
-  content '>'
-  font-size 20px
-  transform scale(5)
+.icon__next, .icon__pre
+  display flex
+  justify-content center
+  align-items center
+  width 40px
+  height 40px
+  border-radius 40px
+  background-color rgba(0, 0, 0, .3)
+  &:hover
+    background-color rgba(0, 0, 0, .2)
+  img
+    width 20px
+    height 20px
 // 导航样式
 ul.card-nav
   position absolute
   bottom 0
-  left 50%
-  transform translateX(-50%)
-  display flex
-  flex-wrap nowrap
-  justify-content space-around
-  width 50%
+  width 100%
   height 20px
   padding 0
   margin 0
   list-style none
   li
+    display inline
+    margin 0 5px
     cursor pointer
-.card-nav-item
-  display inline-block
-  vertical-align middle
-  width 20px
-  height 2px
-  background-color black
-  opacity 0.4
-  transition all .5s ease
+  .card-nav-item
+    display inline-block
+    vertical-align middle
+    width 20px
+    height 2px
+    background-color black
+    opacity 0.4
+    transition all .5s ease
 .active
   background-color white !important
   opacity 1 !important
