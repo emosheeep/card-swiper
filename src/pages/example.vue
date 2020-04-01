@@ -1,5 +1,5 @@
 <template>
-   <card-swipe
+   <card-swiper
       :images="images"
       @change="onChange"
       class="swiper"
@@ -7,11 +7,10 @@
 </template>
 
 <script>
+import CardSwiper from '../components/CardSwiper'
 export default {
   name: 'example',
-  components: {
-    'card-swipe': () => import('@/components/CardSwiper.vue')
-  },
+  components: { CardSwiper },
   data () {
     return {
       path: 'http://file.biubiubius.com/background',

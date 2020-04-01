@@ -210,12 +210,11 @@ export default {
     }
   },
   mounted () {
-    if (this.images.length === 0) {
-      throw new Error('images shouldn\'t be empty !')
-    }
-    this.init()
-    this.setTimer()
-    this.bindHover()
+    this.$once('hook:updated', () => {
+      this.init()
+      this.setTimer()
+      this.bindHover()
+    })
   }
 }
 </script>
